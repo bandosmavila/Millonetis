@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Millonetis — Administración</title>
+<style>
+  :root {
+    --color-primario: #2c5f2d;
+    --color-fondo: #faf6ee;
+    --color-texto: #2b2b2b;
+    --color-borde: #d9d0bd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--color-fondo);
+    color: var(--color-texto);
+    margin: 0;
+    padding: 24px 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .tarjeta {
+    background: #fff;
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  h1 {
+    font-size: 1.3rem;
+    margin-top: 0;
+    color: var(--color-primario);
+    text-align: center;
+  }
+  p.aviso {
+    font-size: 0.85rem;
+    color: #777;
+    text-align: center;
+    margin-top: -8px;
+  }
+  label { font-weight: 600; font-size: 0.9rem; }
+  input, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    margin-bottom: 16px;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  button {
+    background: var(--color-primario);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button:hover { opacity: 0.9; }
+  #mensajeAdmin {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 4px;
+  }
+  a.volver {
+    display: block;
+    text-align: center;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #777;
+  }
+</style>
+</head>
+<body>
+<div class="tarjeta">
+  <h1>🔒 Millonetis — Administración</h1>
+  <p class="aviso">Solo el gestor. Anota aquí el premio de cada número tras el sorteo.</p>
+
+  <label for="numeroAdmin">Número</label>
+  <input type="text" id="numeroAdmin" placeholder="Ej. 34527">
+
+  <label for="premioAdmin">Importe premio (€)</label>
+  <input type="number" id="premioAdmin" placeholder="0" step="0.01">
+
+  <label for="claveAdmin">Clave</label>
+  <input type="password" id="claveAdmin" placeholder="Tu clave">
+
+  <button id="btnGuardarPremio">Guardar premio</button>
+  <div id="mensajeAdmin"></div>
+
+  <a class="volver" href="tabla.html">← Volver a resultados</a>
+</div>
+
+<script>
+  // ---- CONFIGURACIÓN: EDITA ESTO ANTES DE PUBLICAR ----
+  var API_URL = 'PON_AQUI_LA_URL_DE_TU_DESPLIEGUE_DE_APPS_SCRIPT';
+  var JORNADA = 'Navidad2026';
+  // -------------------------------------------------------
+
+  document.getElementById('btnGuardarPremio').addEventListener('click', function() {
+    var clave = document.getElementById('claveAdmin').value;
+    var numero = document.getElementById('numeroAdmin').value.trim();
+    var premio = document.getElementById('premioAdmin').value || '0';
+    var mensajeAdmin = document.getElementById('mensajeAdmin');
+
+    if (!clave || !numero) {
+      mensajeAdmin.textContent = 'Rellena la clave y el número.';
+      return;
+    }
+
+    var params = new URLSearchParams({
+      accion: 'premio',
+      clave: clave,
+      jornada: JORNADA,
+      numero: numero,
+      premio: premio
+    });
+
+    mensajeAdmin.textContent = 'Guardando...';
+    fetch(API_URL + '?' + params.toString())
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          mensajeAdmin.textContent = 'Premio guardado.';
+          document.getElementById('numeroAdmin').value = '';
+          document.getElementById('premioAdmin').value = '';
+        } else {
+          mensajeAdmin.textContent = 'Error: ' + data.error;
+        }
+      })
+      .catch(function() {
+        mensajeAdmin.textContent = 'Error de conexión.';
+      });
+  });
+</script>
+</body>
+</html>

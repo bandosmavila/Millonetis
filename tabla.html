@@ -36,29 +36,6 @@
   }
   th { background: var(--color-primario); color: #fff; }
   tfoot td { font-weight: 700; background: #f1ece0; }
-  .admin {
-    margin-top: 32px;
-    background: #fff;
-    border: 1px dashed var(--color-borde);
-    border-radius: 10px;
-    padding: 16px;
-  }
-  .admin input {
-    padding: 8px;
-    margin: 4px 4px 4px 0;
-    border-radius: 6px;
-    border: 1px solid var(--color-borde);
-  }
-  .admin button {
-    padding: 8px 14px;
-    margin: 4px 0;
-    border-radius: 6px;
-    border: none;
-    background: var(--color-primario);
-    color: #fff;
-    cursor: pointer;
-  }
-  #mensajeAdmin { margin-top: 8px; font-size: 0.9rem; }
 </style>
 </head>
 <body>
@@ -75,21 +52,11 @@
       <tr><td colspan="3">Total premio</td><td id="totalPremio">0 €</td></tr>
     </tfoot>
   </table>
-
-  <details class="admin">
-    <summary>Administración (solo gestor)</summary>
-    <p>Introduce el premio correspondiente a un número tras el sorteo:</p>
-    <input type="password" id="claveAdmin" placeholder="Clave">
-    <input type="text" id="numeroAdmin" placeholder="Número">
-    <input type="number" id="premioAdmin" placeholder="Importe premio (€)" step="0.01">
-    <button id="btnGuardarPremio">Guardar premio</button>
-    <div id="mensajeAdmin"></div>
-  </details>
 </div>
 
 <script>
   // ---- CONFIGURACIÓN: EDITA ESTO ANTES DE PUBLICAR ----
-  var API_URL = 'https://script.google.com/macros/s/AKfycbwZnY4dsCOnxzMDZn6ERxLxQC_Ifwdy8r_NjGawLQukhqokcf9zYc0GR8U-pNNeI7E5/exec';
+  var API_URL = 'PON_AQUI_LA_URL_DE_TU_DESPLIEGUE_DE_APPS_SCRIPT';
   var JORNADA = 'Navidad2026';
   // -------------------------------------------------------
 
@@ -123,41 +90,6 @@
         document.getElementById('cuerpoTabla').innerHTML = '<tr><td colspan="4">Error al cargar los datos.</td></tr>';
       });
   }
-
-  document.getElementById('btnGuardarPremio').addEventListener('click', function() {
-    var clave = document.getElementById('claveAdmin').value;
-    var numero = document.getElementById('numeroAdmin').value.trim();
-    var premio = document.getElementById('premioAdmin').value || '0';
-    var mensajeAdmin = document.getElementById('mensajeAdmin');
-
-    if (!clave || !numero) {
-      mensajeAdmin.textContent = 'Rellena la clave y el número.';
-      return;
-    }
-
-    var params = new URLSearchParams({
-      accion: 'premio',
-      clave: clave,
-      jornada: JORNADA,
-      numero: numero,
-      premio: premio
-    });
-
-    mensajeAdmin.textContent = 'Guardando...';
-    fetch(API_URL + '?' + params.toString())
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.ok) {
-          mensajeAdmin.textContent = 'Premio guardado.';
-          cargarTabla();
-        } else {
-          mensajeAdmin.textContent = 'Error: ' + data.error;
-        }
-      })
-      .catch(function() {
-        mensajeAdmin.textContent = 'Error de conexión.';
-      });
-  });
 
   cargarTabla();
 </script>
