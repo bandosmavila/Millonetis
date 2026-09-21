@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Millonetis — Aportar décimo</title>
+<style>
+  :root {
+    --color-primario: #2c5f2d;
+    --color-fondo: #faf6ee;
+    --color-texto: #2b2b2b;
+    --color-borde: #d9d0bd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--color-fondo);
+    color: var(--color-texto);
+    margin: 0;
+    padding: 24px 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .tarjeta {
+    background: #fff;
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin-top: 0;
+    color: var(--color-primario);
+    text-align: center;
+  }
+  select, input, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    margin-bottom: 16px;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  label { font-weight: 600; font-size: 0.9rem; }
+  button {
+    background: var(--color-primario);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button:hover { opacity: 0.9; }
+  .mensaje {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 12px;
+  }
+  .ok { background: #e3f4e1; color: #2c5f2d; }
+  .error { background: #fbe4e4; color: #a12727; }
+  .cambiar {
+    display: inline;
+    font-size: 0.85rem;
+    color: #777;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+<div class="tarjeta">
+  <h1>🎄 Millonetis</h1>
+
+  <div id="pantallaNombre">
+    <label for="selectNombre">¿Quién eres?</label>
+    <select id="selectNombre">
+      <option value="">-- Elige tu nombre --</option>
+    </select>
+    <button id="btnElegir">Continuar</button>
+  </div>
+
+  <div id="pantallaFormulario" style="display:none;">
+    <p>Hola, <strong id="nombreActual"></strong> — <span class="cambiar" id="btnCambiar">cambiar</span></p>
+    <form id="formDecimo">
+      <label for="numero">Número del décimo</label>
+      <input type="text" id="numero" required placeholder="Ej. 34527">
+
+      <label for="recargo">Recargo (€, si lo hay)</label>
+      <input type="number" id="recargo" min="0" step="0.01" value="0">
+
+      <button type="submit">Registrar mi décimo</button>
+    </form>
+    <div id="mensaje"></div>
+  </div>
+</div>
+
+<script>
+  // ---- CONFIGURACIÓN: EDITA ESTO ANTES DE PUBLICAR ----
+  var API_URL = 'https://script.google.com/macros/s/AKfycbwZnY4dsCOnxzMDZn6ERxLxQC_Ifwdy8r_NjGawLQukhqokcf9zYc0GR8U-pNNeI7E5/exec';
+  var CLAVE = 'mLn7-Kx92QwPzR4vT8sB1cYh6fJd0Nea'; // debe coincidir con la CLAVE de Codigo.gs
+  var JORNADA = 'Navidad2026';
+  var NOMBRES = [
+    'Víctor', 'Miguel', 'Roberto', 'José Antonio', 'Marcos',
+    'Eva', 'Cheli', 'Pedro', 'Fidel'
+  ];
+  // -------------------------------------------------------
+
+  var CLAVE_STORAGE = 'loteriaamigos_jugador';
+  var selectNombre = document.getElementById('selectNombre');
+  var pantallaNombre = document.getElementById('pantallaNombre');
+  var pantallaFormulario = document.getElementById('pantallaFormulario');
+  var nombreActual = document.getElementById('nombreActual');
+  var mensaje = document.getElementById('mensaje');
+
+  NOMBRES.forEach(function(n) {
+    var opt = document.createElement('option');
+    opt.value = n;
+    opt.textContent = n;
+    selectNombre.appendChild(opt);
+  });
+
+  function mostrarFormulario(nombre) {
+    nombreActual.textContent = nombre;
+    pantallaNombre.style.display = 'none';
+    pantallaFormulario.style.display = 'block';
+  }
+
+  var guardado = localStorage.getItem(CLAVE_STORAGE);
+  if (guardado) {
+    mostrarFormulario(guardado);
+  }
+
+  document.getElementById('btnElegir').addEventListener('click', function() {
+    var nombre = selectNombre.value;
+    if (!nombre) return;
+    localStorage.setItem(CLAVE_STORAGE, nombre);
+    mostrarFormulario(nombre);
+  });
+
+  document.getElementById('btnCambiar').addEventListener('click', function() {
+    localStorage.removeItem(CLAVE_STORAGE);
+    pantallaFormulario.style.display = 'none';
+    pantallaNombre.style.display = 'block';
+    mensaje.innerHTML = '';
+  });
+
+  document.getElementById('formDecimo').addEventListener('submit', function(ev) {
+    ev.preventDefault();
+    var nombre = localStorage.getItem(CLAVE_STORAGE);
+    var numero = document.getElementById('numero').value.trim();
+    var recargo = document.getElementById('recargo').value || '0';
+
+    var params = new URLSearchParams({
+      accion: 'aportar',
+      clave: CLAVE,
+      jornada: JORNADA,
+      nombre: nombre,
+      numero: numero,
+      recargo: recargo
+    });
+
+    mensaje.innerHTML = 'Enviando...';
+
+    fetch(API_URL + '?' + params.toString())
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          mensaje.innerHTML = '<div class="mensaje ok">¡Décimo registrado correctamente!</div>';
+          document.getElementById('formDecimo').style.display = 'none';
+        } else {
+          mensaje.innerHTML = '<div class="mensaje error">' + data.error + '</div>';
+        }
+      })
+      .catch(function() {
+        mensaje.innerHTML = '<div class="mensaje error">Error de conexión. Inténtalo de nuevo.</div>';
+      });
+  });
+</script>
+</body>
+</html>

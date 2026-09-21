@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Millonetis — Resultados</title>
+<style>
+  :root {
+    --color-primario: #2c5f2d;
+    --color-fondo: #faf6ee;
+    --color-texto: #2b2b2b;
+    --color-borde: #d9d0bd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--color-fondo);
+    color: var(--color-texto);
+    margin: 0;
+    padding: 24px 16px;
+  }
+  .contenedor { max-width: 700px; margin: 0 auto; }
+  h1 { color: var(--color-primario); text-align: center; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-borde);
+  }
+  th { background: var(--color-primario); color: #fff; }
+  tfoot td { font-weight: 700; background: #f1ece0; }
+  .admin {
+    margin-top: 32px;
+    background: #fff;
+    border: 1px dashed var(--color-borde);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .admin input {
+    padding: 8px;
+    margin: 4px 4px 4px 0;
+    border-radius: 6px;
+    border: 1px solid var(--color-borde);
+  }
+  .admin button {
+    padding: 8px 14px;
+    margin: 4px 0;
+    border-radius: 6px;
+    border: none;
+    background: var(--color-primario);
+    color: #fff;
+    cursor: pointer;
+  }
+  #mensajeAdmin { margin-top: 8px; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+  <h1>🎄 Millonetis — Resultados</h1>
+  <table>
+    <thead>
+      <tr><th>Número</th><th>Aportado por</th><th>Recargo</th><th>Premio</th></tr>
+    </thead>
+    <tbody id="cuerpoTabla">
+      <tr><td colspan="4">Cargando...</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td colspan="3">Total premio</td><td id="totalPremio">0 €</td></tr>
+    </tfoot>
+  </table>
+
+  <details class="admin">
+    <summary>Administración (solo gestor)</summary>
+    <p>Introduce el premio correspondiente a un número tras el sorteo:</p>
+    <input type="password" id="claveAdmin" placeholder="Clave">
+    <input type="text" id="numeroAdmin" placeholder="Número">
+    <input type="number" id="premioAdmin" placeholder="Importe premio (€)" step="0.01">
+    <button id="btnGuardarPremio">Guardar premio</button>
+    <div id="mensajeAdmin"></div>
+  </details>
+</div>
+
+<script>
+  // ---- CONFIGURACIÓN: EDITA ESTO ANTES DE PUBLICAR ----
+  var API_URL = 'https://script.google.com/macros/s/AKfycbwZnY4dsCOnxzMDZn6ERxLxQC_Ifwdy8r_NjGawLQukhqokcf9zYc0GR8U-pNNeI7E5/exec';
+  var JORNADA = 'Navidad2026';
+  // -------------------------------------------------------
+
+  function euros(v) {
+    return (v === null || v === undefined || v === '') ? '—' : Number(v).toFixed(2) + ' €';
+  }
+
+  function cargarTabla() {
+    var params = new URLSearchParams({ accion: 'listar', jornada: JORNADA });
+    fetch(API_URL + '?' + params.toString())
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var cuerpo = document.getElementById('cuerpoTabla');
+        cuerpo.innerHTML = '';
+        if (!data.ok || data.aportaciones.length === 0) {
+          cuerpo.innerHTML = '<tr><td colspan="4">Aún no hay décimos registrados.</td></tr>';
+        } else {
+          data.aportaciones.forEach(function(fila) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td>' + fila.numero + '</td>' +
+              '<td>' + fila.nombre + '</td>' +
+              '<td>' + euros(fila.recargo) + '</td>' +
+              '<td>' + euros(fila.premio) + '</td>';
+            cuerpo.appendChild(tr);
+          });
+        }
+        document.getElementById('totalPremio').textContent = euros(data.totalPremio || 0);
+      })
+      .catch(function() {
+        document.getElementById('cuerpoTabla').innerHTML = '<tr><td colspan="4">Error al cargar los datos.</td></tr>';
+      });
+  }
+
+  document.getElementById('btnGuardarPremio').addEventListener('click', function() {
+    var clave = document.getElementById('claveAdmin').value;
+    var numero = document.getElementById('numeroAdmin').value.trim();
+    var premio = document.getElementById('premioAdmin').value || '0';
+    var mensajeAdmin = document.getElementById('mensajeAdmin');
+
+    if (!clave || !numero) {
+      mensajeAdmin.textContent = 'Rellena la clave y el número.';
+      return;
+    }
+
+    var params = new URLSearchParams({
+      accion: 'premio',
+      clave: clave,
+      jornada: JORNADA,
+      numero: numero,
+      premio: premio
+    });
+
+    mensajeAdmin.textContent = 'Guardando...';
+    fetch(API_URL + '?' + params.toString())
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          mensajeAdmin.textContent = 'Premio guardado.';
+          cargarTabla();
+        } else {
+          mensajeAdmin.textContent = 'Error: ' + data.error;
+        }
+      })
+      .catch(function() {
+        mensajeAdmin.textContent = 'Error de conexión.';
+      });
+  });
+
+  cargarTabla();
+</script>
+</body>
+</html>
