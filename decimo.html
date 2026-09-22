@@ -95,6 +95,9 @@
       <label for="numero">Número del décimo</label>
       <input type="text" id="numero" required placeholder="Ej. 34527">
 
+      <label for="origen">Origen (de dónde es)</label>
+      <input type="text" id="origen" maxlength="30" placeholder="Ej. El del Cura, CSIF...">
+
       <label for="recargo">Recargo (€, si lo hay)</label>
       <input type="number" id="recargo" min="0" step="0.01" value="0">
 
@@ -160,6 +163,7 @@
     ev.preventDefault();
     var nombre = localStorage.getItem(CLAVE_STORAGE);
     var numero = document.getElementById('numero').value.trim();
+    var origen = document.getElementById('origen').value.trim();
     var recargo = document.getElementById('recargo').value || '0';
 
     var params = new URLSearchParams({
@@ -168,6 +172,7 @@
       jornada: JORNADA,
       nombre: nombre,
       numero: numero,
+      origen: origen,
       recargo: recargo
     });
 
