@@ -73,21 +73,63 @@
     font-size: 0.85rem;
     color: #777;
   }
+  .separador {
+    border: none;
+    border-top: 1px dashed var(--color-borde);
+    margin: 24px 0;
+  }
+  .disclaimer {
+    background: #fbf3d9;
+    border: 1px solid #e8d98a;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    color: #6b5900;
+    margin-bottom: 14px;
+  }
+  table.resultados {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 0.9rem;
+  }
+  table.resultados th, table.resultados td {
+    text-align: left;
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--color-borde);
+  }
 </style>
 </head>
 <body>
 <div class="tarjeta">
   <h1>🔒 Millonetis — Administración</h1>
-  <p class="aviso">Solo el gestor. Anota aquí el premio de cada número tras el sorteo.</p>
+  <p class="aviso">Solo el gestor.</p>
 
+  <label for="claveAdmin">Clave</label>
+  <input type="password" id="claveAdmin" placeholder="Tu clave">
+
+  <hr class="separador">
+
+  <h2 style="font-size:1rem; margin-bottom:4px;">Comprobar premios automáticamente</h2>
+  <div class="disclaimer">
+    ⚠️ Esto consulta una fuente <strong>no oficial</strong> (no es de Loterías
+    y Apuestas del Estado) y solo funciona para la Lotería de Navidad. Guarda
+    el premio de cada número directamente en la hoja. Si el sorteo aún no se
+    ha celebrado, o algún número tiene un premio muy alto, verifícalo también
+    en la web oficial.
+  </div>
+  <button id="btnComprobar">Comprobar y guardar automáticamente</button>
+  <div id="mensajeComprobar"></div>
+  <div id="resultadosComprobar"></div>
+
+  <hr class="separador">
+
+  <h2 style="font-size:1rem; margin-bottom:4px;">Anotar un premio a mano</h2>
   <label for="numeroAdmin">Número</label>
   <input type="text" id="numeroAdmin" placeholder="Ej. 34527">
 
   <label for="premioAdmin">Importe premio (€)</label>
   <input type="number" id="premioAdmin" placeholder="0" step="0.01">
-
-  <label for="claveAdmin">Clave</label>
-  <input type="password" id="claveAdmin" placeholder="Tu clave">
 
   <button id="btnGuardarPremio">Guardar premio</button>
   <div id="mensajeAdmin"></div>
@@ -97,9 +139,67 @@
 
 <script>
   // ---- CONFIGURACIÓN: EDITA ESTO ANTES DE PUBLICAR ----
-  var API_URL = 'PON_AQUI_LA_URL_DE_TU_DESPLIEGUE_DE_APPS_SCRIPT';
+  var API_URL = 'https://script.google.com/macros/s/AKfycbwZnY4dsCOnxzMDZn6ERxLxQC_Ifwdy8r_NjGawLQukhqokcf9zYc0GR8U-pNNeI7E5/exec';
   var JORNADA = 'Navidad2026';
   // -------------------------------------------------------
+
+  function textoEstado(status) {
+    switch (status) {
+      case 0: return 'el sorteo aún no se ha celebrado';
+      case 1: return 'sorteo en curso';
+      case 2: return 'resultados provisionales';
+      case 3: return 'resultados semioficiales';
+      case 4: return 'resultados oficiales';
+      default: return 'estado desconocido';
+    }
+  }
+
+  document.getElementById('btnComprobar').addEventListener('click', function() {
+    var clave = document.getElementById('claveAdmin').value;
+    var mensajeComprobar = document.getElementById('mensajeComprobar');
+    var resultadosDiv = document.getElementById('resultadosComprobar');
+
+    if (!clave) {
+      mensajeComprobar.textContent = 'Rellena la clave primero.';
+      return;
+    }
+
+    var params = new URLSearchParams({ accion: 'comprobar', clave: clave, jornada: JORNADA });
+    mensajeComprobar.textContent = 'Consultando y guardando...';
+    resultadosDiv.innerHTML = '';
+
+    fetch(API_URL + '?' + params.toString())
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.ok) {
+          mensajeComprobar.textContent = 'Error: ' + data.error;
+          return;
+        }
+        mensajeComprobar.textContent = 'Hecho — ' + textoEstado(data.estadoSorteo) + '.';
+
+        if (data.resultados.length === 0) {
+          resultadosDiv.innerHTML = '<p>No hay aportaciones registradas en esta jornada.</p>';
+          return;
+        }
+
+        var tabla = document.createElement('table');
+        tabla.className = 'resultados';
+        tabla.innerHTML = '<thead><tr><th>Número</th><th>Nombre</th><th>Premio (20€)</th></tr></thead>';
+        var cuerpo = document.createElement('tbody');
+        data.resultados.forEach(function(fila) {
+          var tr = document.createElement('tr');
+          var premioTexto = fila.error ? 'Error: ' + fila.error
+            : (fila.premio === null ? '—' : Number(fila.premio).toFixed(2) + ' €');
+          tr.innerHTML = '<td>' + fila.numero + '</td><td>' + fila.nombre + '</td><td>' + premioTexto + '</td>';
+          cuerpo.appendChild(tr);
+        });
+        tabla.appendChild(cuerpo);
+        resultadosDiv.appendChild(tabla);
+      })
+      .catch(function() {
+        mensajeComprobar.textContent = 'Error de conexión.';
+      });
+  });
 
   document.getElementById('btnGuardarPremio').addEventListener('click', function() {
     var clave = document.getElementById('claveAdmin').value;
