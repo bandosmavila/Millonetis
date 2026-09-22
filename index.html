@@ -62,13 +62,13 @@
   <a class="boton" href="decimo.html">📝 Aportar / cambiar mi décimo</a>
   <table>
     <thead>
-      <tr><th>Número</th><th>Aportado por</th><th>Recargo</th><th>Premio</th></tr>
+      <tr><th>Número</th><th>Nombre</th><th>Origen</th><th>Recargo</th><th>Premio</th></tr>
     </thead>
     <tbody id="cuerpoTabla">
-      <tr><td colspan="4">Cargando...</td></tr>
+      <tr><td colspan="5">Cargando...</td></tr>
     </tbody>
     <tfoot>
-      <tr><td colspan="3">Total premio</td><td id="totalPremio">0 €</td></tr>
+      <tr><td colspan="4">Total premio</td><td id="totalPremio">0 €</td></tr>
     </tfoot>
   </table>
 </div>
@@ -91,13 +91,14 @@
         var cuerpo = document.getElementById('cuerpoTabla');
         cuerpo.innerHTML = '';
         if (!data.ok || data.aportaciones.length === 0) {
-          cuerpo.innerHTML = '<tr><td colspan="4">Aún no hay décimos registrados.</td></tr>';
+          cuerpo.innerHTML = '<tr><td colspan="5">Aún no hay décimos registrados.</td></tr>';
         } else {
           data.aportaciones.forEach(function(fila) {
             var tr = document.createElement('tr');
             tr.innerHTML =
               '<td>' + fila.numero + '</td>' +
               '<td>' + fila.nombre + '</td>' +
+              '<td>' + (fila.origen || '') + '</td>' +
               '<td>' + euros(fila.recargo) + '</td>' +
               '<td>' + euros(fila.premio) + '</td>';
             cuerpo.appendChild(tr);
@@ -106,7 +107,7 @@
         document.getElementById('totalPremio').textContent = euros(data.totalPremio || 0);
       })
       .catch(function() {
-        document.getElementById('cuerpoTabla').innerHTML = '<tr><td colspan="4">Error al cargar los datos.</td></tr>';
+        document.getElementById('cuerpoTabla').innerHTML = '<tr><td colspan="5">Error al cargar los datos.</td></tr>';
       });
   }
 
