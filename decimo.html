@@ -93,7 +93,7 @@
     <p>Hola, <strong id="nombreActual"></strong> — <span class="cambiar" id="btnCambiar">cambiar</span></p>
     <form id="formDecimo">
       <label for="numero">Número del décimo</label>
-      <input type="text" id="numero" required placeholder="Ej. 34527">
+      <input type="text" id="numero" required maxlength="5" inputmode="numeric" pattern="[0-9]{5}" placeholder="Ej. 34527">
 
       <label for="origen">Origen (de dónde es)</label>
       <input type="text" id="origen" maxlength="30" placeholder="Ej. El del Cura, CSIF...">
@@ -163,6 +163,10 @@
     ev.preventDefault();
     var nombre = localStorage.getItem(CLAVE_STORAGE);
     var numero = document.getElementById('numero').value.trim();
+    if (!/^[0-9]{5}$/.test(numero)) {
+      alert('El número tiene que ser exactamente 5 cifras (solo números), por ejemplo 03456.');
+      return;
+    }
     var origen = document.getElementById('origen').value.trim();
     var recargo = document.getElementById('recargo').value || '0';
 
